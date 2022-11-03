@@ -1,0 +1,44 @@
+name: "Code Scanning - Action"
+
+# Docs for this at https://github.com/github/codeql-action#usage
+
+on:
+  schedule:
+    #        ┌───────────── minute (0 - 59)
+    #        │  ┌───────────── hour (0 - 23)
+    #        │  │ ┌───────────── day of the month (1 - 31)
+    #        │  │ │ ┌───────────── month (1 - 12 or JAN-DEC)
+    #        │  │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
+    #        │  │ │ │ │
+    #        │  │ │ │ │
+    #        │  │ │ │ │
+    #        *  * * * *
+    - cron: '30 1 * * 1'
+
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
+jobs:
+  CodeQL-Build:
+    # CodeQL runs on ubuntu-latest, windows-latest, and macos-latest
+    runs-on: ubuntu-latest
+
+    permissions:
+      # required for all workflows
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8230315d06ad95c617244d2f265d237a1682d445
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@297ec80a468c234608046f51ee8c65da128a1e94
+        with:
+          languages: java
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@297ec80a468c234608046f51ee8c65da128a1e94
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@297ec80a468c234608046f51ee8c65da128a1e94

@@ -3,14 +3,16 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>dev.openfeature</groupId>
-  <artifactId>javasdk</artifactId>
-  <version>0.2.1</version> <!--x-release-please-version -->
+  <artifactId>sdk</artifactId>
+  <version>1.0.0</version> <!--x-release-please-version -->
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-    <junit.jupiter.version>5.8.1</junit.jupiter.version>
+    <junit.jupiter.version>5.9.1</junit.jupiter.version>
+    <!-- exclusion expression for integration tests -->
+    <testExclusions>**/integration/*.java</testExclusions>
   </properties>
 
   <name>OpenFeature Java SDK</name>
@@ -46,12 +48,11 @@
       <scope>provided</scope>
     </dependency>
 
-
     <dependency>
       <!-- used so that lombok can generate suppressions for spotbugs. It needs to find it on the relevant classpath -->
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs</artifactId>
-      <version>4.7.1</version>
+      <version>4.7.3</version>
       <scope>compile</scope>
     </dependency>
 
@@ -65,7 +66,7 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>4.6.1</version>
+      <version>4.8.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -96,29 +97,121 @@
       <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
       <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-suite</artifactId>
-      <version>1.8.1</version>
+      <version>1.9.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-java</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>io.cucumber</groupId>
+        <artifactId>cucumber-junit-platform-engine</artifactId>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>31.1-jre</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>dev.openfeature.contrib.providers</groupId>
+      <artifactId>flagd</artifactId>
+      <version>0.4.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
+  <dependencyManagement>
+    <dependencies>
+
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-bom</artifactId>
+            <version>7.8.1</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit</groupId>
+            <artifactId>junit-bom</artifactId>
+            <version>5.9.1</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <plugins>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <id>get-cpu-count</id>
+            <goals>
+              <goal>cpu-count</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <version>2.7.2</version>
+        <configuration>
+          <projectType>library</projectType>
+          <schemaVersion>1.3</schemaVersion>
+          <includeBomSerialNumber>true</includeBomSerialNumber>
+          <includeCompileScope>true</includeCompileScope>
+          <includeProvidedScope>true</includeProvidedScope>
+          <includeRuntimeScope>true</includeRuntimeScope>
+          <includeSystemScope>true</includeSystemScope>
+          <includeTestScope>false</includeTestScope>
+          <includeLicenseText>false</includeLicenseText>
+          <outputFormat>all</outputFormat>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>makeAggregateBom</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+     
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>3.3.0</version>
@@ -137,16 +230,21 @@
             <ignoredUnusedDeclaredDependency>org.junit*</ignoredUnusedDeclaredDependency>
           </ignoredUnusedDeclaredDependencies>
           <ignoredDependencies>
+            <ignoredDependency>com.google.guava*</ignoredDependency>
+            <ignoredDependency>io.cucumber*</ignoredDependency>
+            <ignoredDependency>org.junit*</ignoredDependency>
             <ignoredDependency>com.google.code.findbugs*</ignoredDependency>
             <ignoredDependency>com.github.spotbugs*</ignoredDependency>
             <ignoredDependency>uk.org.lidalia:lidalia-slf4j-ext:*</ignoredDependency>
           </ignoredDependencies>
         </configuration>
       </plugin>
+
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.10.1</version>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -155,6 +253,13 @@
           <argLine>
             ${surefireArgLine}
           </argLine>
+          <!-- fork a new JVM to isolate test suites, especially important with singletons -->
+          <forkCount>${cpu.count}</forkCount>
+          <reuseForks>false</reuseForks>
+          <excludes>
+            <!-- tests to exclude -->
+            <exclude>${testExclusions}</exclude>
+         </excludes>
         </configuration>
       </plugin>
 
@@ -208,7 +313,7 @@
             <configuration>
               <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
               <excludes>
-                <exclude>dev/openfeature/javasdk/exceptions/**</exclude>
+                <exclude>dev/openfeature/sdk/exceptions/**</exclude>
               </excludes>
 
               <rules>
@@ -224,7 +329,7 @@
                 </rule>
               </rules>
             </configuration>
- 	  </execution>
+ 	        </execution>
 
         </executions>
       </plugin>
@@ -233,7 +338,7 @@
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.6.7</version>
+        <version>1.6.13</version>
         <extensions>true</extensions>
         <configuration>
           <serverId>ossrh</serverId>
@@ -247,7 +352,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>2.2.1</version>
+        <version>3.2.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -257,10 +362,11 @@
           </execution>
         </executions>
       </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.4.1</version>
         <configuration>
           <failOnWarnings>true</failOnWarnings>
         </configuration>
@@ -279,7 +385,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
-        <version>1.5</version>
+        <version>3.0.1</version>
         <executions>
             <execution>
                 <id>sign-artifacts</id>
@@ -295,7 +401,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>3.19.0</version>
         <executions>
           <execution>
             <id>run-pmd</id>
@@ -310,7 +416,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.7.0.0</version>
+        <version>4.7.2.1</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclusions.xml</excludeFilterFile>
           <plugins>
@@ -326,7 +432,7 @@
           <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs</artifactId>
-            <version>4.7.1</version>
+            <version>4.7.3</version>
           </dependency>
         </dependencies>
         <executions>
@@ -343,7 +449,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.1.2</version>
+        <version>3.2.0</version>
         <configuration>
           <configLocation>checkstyle.xml</configLocation>
           <encoding>UTF-8</encoding>
@@ -355,7 +461,7 @@
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>8.31</version>
+            <version>8.45.1</version>
           </dependency>
         </dependencies>
         <executions>
@@ -371,6 +477,61 @@
 
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <!-- this profile handles running the flagd integration tests -->
+      <id>integration-test</id>
+      <properties>
+        <!-- run the integration tests by clearing the exclusions -->
+        <testExclusions/>
+      </properties>  
+      <build>
+        <plugins>
+          <!-- pull the gherkin tests as a git submodule  -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>update-test-harness-submodule</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <!-- run: git submodule update \-\-init \-\-recursive -->
+                  <executable>git</executable>
+                  <arguments>
+                    <argument>submodule</argument>
+                    <argument>update</argument>
+                    <argument>--init</argument>
+                    <argument>--recursive</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-gherkin-tests</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <!-- run: cp test-harness/features/evaluation.feature src/test/resources/features/ -->
+                  <executable>cp</executable>
+                  <arguments>
+                    <argument>test-harness/features/evaluation.feature</argument>
+                    <argument>src/test/resources/features/</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <distributionManagement>
     <snapshotRepository>
